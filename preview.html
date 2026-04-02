@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dental Lab Manager — Local Preview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --surface2: #f1f0ec;
+    --border: #e5e3dc;
+    --text: #1a1917;
+    --text-muted: #78756e;
+    --primary: #1d6b4a;
+    --primary-light: #e8f4ef;
+    --primary-mid: #d0e9de;
+    --red: #c0392b;
+    --red-light: #fdf2f2;
+    --amber: #b45309;
+    --amber-light: #fffbeb;
+    --blue: #1d4ed8;
+    --blue-light: #eff6ff;
+    --emerald: #065f46;
+    --emerald-light: #ecfdf5;
+    --violet: #6d28d9;
+    --violet-light: #f5f3ff;
+    --rose: #9f1239;
+    --rose-light: #fff1f2;
+    --sidebar-w: 224px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  .mono { font-family: 'DM Mono', monospace; }
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--primary);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .logo-text { font-size: 13px; font-weight: 700; line-height: 1; }
+  .logo-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+  .preview-badge {
+    margin: 8px;
+    background: var(--amber-light);
+    border: 1px solid #fbbf24;
+    border-radius: 8px;
+    padding: 7px 10px;
+  }
+  .preview-badge-title { font-size: 10px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: 0.06em; }
+  .preview-badge-sub { font-size: 10px; color: #92400e; margin-top: 1px; }
+  nav { flex: 1; padding: 8px; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    box-shadow: inset 0 0 0 1px var(--primary-mid);
+  }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .nav-chevron { margin-left: auto; opacity: 0.4; width: 12px; height: 12px; }
+  .alert-strip {
+    margin: 0 8px 8px;
+    background: var(--red-light);
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .alert-strip-text { font-size: 11px; font-weight: 600; color: var(--red); }
+  .profile-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .profile-name { font-size: 12px; font-weight: 600; }
+  .profile-role { font-size: 10px; color: var(--text-muted); text-transform: capitalize; }
+  .main-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .topbar {
+    height: 56px; flex-shrink: 0;
+    background: rgba(255,255,255,0.95);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-title { font-size: 13.5px; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .bell-btn {
+    position: relative;
+    padding: 7px;
+    border-radius: 8px;
+    background: none; border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: background 0.15s;
+  }
+  .bell-btn:hover { background: var(--surface2); }
+  .bell-badge {
+    position: absolute; top: 2px; right: 2px;
+    background: var(--red);
+    color: white; font-size: 9px; font-weight: 700;
+    min-width: 14px; height: 14px;
+    border-radius: 7px; padding: 0 3px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .divider-v { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .user-chip { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 8px; }
+  .user-chip:hover { background: var(--surface2); }
+  .user-name { font-size: 12px; font-weight: 600; line-height: 1.2; }
+  .user-role { font-size: 10px; color: var(--text-muted); }
+  .main-content { flex: 1; overflow-y: auto; padding: 24px 32px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  /* Cards */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    transition: box-shadow 0.2s;
+  }
+  .stat-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+  .stat-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .stat-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+  .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .stat-icon { padding: 8px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .stat-trend { display: flex; align-items: center; gap: 4px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; font-weight: 500; }
+  /* Sections */
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: #fafaf8;
+  }
+  .section-title { font-size: 13px; font-weight: 600; }
+  .section-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .section-body { padding: 16px 18px; }
+  .section-link { font-size: 11px; font-weight: 600; color: var(--primary); text-decoration: none; cursor: pointer; }
+  .section-link:hover { text-decoration: underline; }
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--surface2); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .badge-green { background: var(--emerald-light); color: var(--emerald); border-color: #a7f3d0; }
+  .badge-red { background: var(--red-light); color: var(--red); border-color: #fecaca; }
+  .badge-amber { background: var(--amber-light); color: var(--amber); border-color: #fde68a; }
+  .badge-blue { background: var(--blue-light); color: var(--blue); border-color: #bfdbfe; }
+  .badge-slate { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+  .badge-violet { background: var(--violet-light); color: var(--violet); border-color: #ddd6fe; }
+  /* Alerts panel */
+  .alert-item {
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .alert-item-crit { background: var(--red-light); border-color: #fecaca; }
+  .alert-item-warn { background: var(--amber-light); border-color: #fde68a; }
+  .alert-icon { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert-title { font-size: 12.5px; font-weight: 600; }
+  .alert-msg { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+  .alert-group-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; margin-top: 12px; }
+  .alert-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+  .alert-group-count { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: auto; }
+  /* Chart container */
+  #chart-container { height: 240px; }
+  /* Critical banner */
+  .crit-banner {
+    background: var(--red-light);
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .crit-banner-icon { padding: 6px; background: #fee2e2; border-radius: 8px; flex-shrink: 0; }
+  .crit-banner-title { font-size: 13px; font-weight: 600; color: #7f1d1d; }
+  .crit-banner-msg { font-size: 11.5px; color: #b91c1c; margin-top: 2px; }
+  .crit-banner-close { margin-left: auto; cursor: pointer; color: #ef4444; padding: 4px; border-radius: 6px; border: none; background: none; }
+  .crit-banner-close:hover { background: #fee2e2; }
+  /* preview badge in header */
+  .preview-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600;
+    color: var(--amber);
+    background: var(--amber-light);
+    border: 1px solid #fbbf24;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  /* Stock movement sign */
+  .qty-pos { color: #065f46; font-weight: 600; }
+  .qty-neg { color: var(--red); font-weight: 600; }
+  /* Material stock bar */
+  .stock-bar-wrap { height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; margin-top: 4px; width: 60px; }
+  .stock-bar-fill { height: 100%; border-radius: 2px; }
+  /* Btn */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--primary); color: white;
+    padding: 7px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); color: var(--text);
+    padding: 7px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--surface2); }
+  .btn-green { background: #047857; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-red { background: var(--red); color: white; border: none; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-row { display: flex; gap: 8px; }
+  /* Summary bar */
+  .summary-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  .summary-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid transparent; }
+  .sp-red { background: var(--red-light); color: var(--red); border-color: #fecaca; }
+  .sp-amber { background: var(--amber-light); color: var(--amber); border-color: #fde68a; }
+  .sp-blue { background: var(--blue-light); color: var(--blue); border-color: #bfdbfe; }
+  /* Filter chips */
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .filter-chip {
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; transition: all 0.12s;
+  }
+  .filter-chip:hover { background: var(--surface2); }
+  .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .search-box {
+    padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; background: var(--surface); width: 220px;
+    font-family: inherit; color: var(--text); outline: none;
+  }
+  .search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+  .controls-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  /* Scrollable alerts panel */
+  .alerts-scroll { max-height: 480px; overflow-y: auto; }
+  /* Profit */
+  .profit-pos { color: var(--emerald); font-weight: 600; }
+  .profit-neg { color: var(--red); font-weight: 600; }
+  /* Recharts tooltip */
+  .recharts-tooltip-wrapper { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1)); }
+  /* all clear state */
+  .all-clear { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 10px; color: var(--text-muted); }
+  .all-clear-icon { font-size: 32px; }
+  /* Responsive */
+  @media (max-width: 1024px) { .grid-2-1 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⚗️</div>
+    <div>
+      <div class="logo-text">Dental Lab</div>
+      <div class="logo-sub">Manager</div>
+    </div>
+  </div>
+
+  <div class="preview-badge">
+    <div class="preview-badge-title">Preview Mode</div>
+    <div class="preview-badge-sub">Mock data · No DB needed</div>
+  </div>
+
+  <nav>
+    <button class="nav-item active" onclick="showPage('dashboard', this)">
+      <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+      <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <button class="nav-item" onclick="showPage('materials', this)">
+      <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Materials
+    </button>
+    <button class="nav-item" onclick="showPage('stock', this)">
+      <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+      Stock
+    </button>
+    <button class="nav-item" onclick="showPage('cases', this)">
+      <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Cases
+    </button>
+    <button class="nav-item" onclick="showPage('reports', this)">
+      <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Reports
+    </button>
+  </nav>
+
+  <div class="alert-strip">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span class="alert-strip-text">3 alerts need attention</span>
+  </div>
+
+  <div class="profile-footer">
+    <div class="avatar">A</div>
+    <div>
+      <div class="profile-name">Admin User</div>
+      <div class="profile-role">admin · preview</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-wrap">
+  <header class="topbar">
+    <span class="topbar-title" id="topbar-title">Dashboard</span>
+    <div class="topbar-right">
+      <button class="bell-btn" onclick="showPage('alerts-page', null)">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="bell-badge">3</span>
+      </button>
+      <div class="divider-v"></div>
+      <div class="user-chip">
+        <div class="avatar" style="width:24px;height:24px;font-size:10px;">A</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-role">admin</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <!-- ═══════════ DASHBOARD ═══════════ -->
+    <div class="page active" id="page-dashboard">
+
+      <div class="crit-banner" id="crit-banner">
+        <div class="crit-banner-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#c0392b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        </div>
+        <div>
+          <div class="crit-banner-title">2 critical alerts require immediate attention</div>
+          <div class="crit-banner-msg">Impression Alginate is out of stock · Temporary Composite has expired</div>
+        </div>
+        <button class="crit-banner-close" onclick="document.getElementById('crit-banner').style.display='none'">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard <span class="preview-pill">✦ Mock data</span></div>
+          <div class="page-sub" id="dash-month"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="showPage('alerts-page',null)">View all alerts</button>
+          <button class="btn-primary" onclick="showPage('cases',null)">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Cases
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Total Materials</div>
+              <div class="stat-value">47</div>
+              <div class="stat-sub">Active in catalogue</div>
+            </div>
+            <div class="stat-icon" style="background:#eff6ff">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#1d4ed8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+          </div>
+          <div class="stat-trend" style="color:#6b7280">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            No stockouts
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Inventory Value</div>
+              <div class="stat-value">$12,840</div>
+              <div class="stat-sub">At cost price</div>
+            </div>
+            <div class="stat-icon" style="background:#f5f3ff">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#6d28d9" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Active Alerts</div>
+              <div class="stat-value" style="color:#c0392b">4</div>
+              <div class="stat-sub">2 critical</div>
+            </div>
+            <div class="stat-icon" style="background:#fdf2f2">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#c0392b" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+          </div>
+          <div class="stat-trend" style="color:#c0392b">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            2 critical · 2 warning
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Open Cases</div>
+              <div class="stat-value" style="color:#065f46">9</div>
+              <div class="stat-sub">In progress</div>
+            </div>
+            <div class="stat-icon" style="background:#ecfdf5">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#065f46" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Monthly Cost</div>
+              <div class="stat-value">$4,211</div>
+              <div class="stat-sub">14 completed cases</div>
+            </div>
+            <div class="stat-icon" style="background:#fff1f2">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#9f1239" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div>
+              <div class="stat-label">Monthly Profit</div>
+              <div class="stat-value" style="color:#065f46">$3,139</div>
+              <div class="stat-sub">42.7% margin</div>
+            </div>
+            <div class="stat-icon" style="background:#ecfdf5">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#065f46" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+          </div>
+          <div class="stat-trend" style="color:#065f46">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+            Revenue: $7,350
+          </div>
+        </div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="grid-2-1">
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <!-- Recent movements -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Recent Stock Movements</div>
+                <div class="section-sub">Last 8 transactions</div>
+              </div>
+              <a class="section-link" onclick="showPage('stock',null)">View all</a>
+            </div>
+            <div class="section-body" style="padding:0">
+              <table>
+                <thead><tr><th>Type</th><th>Material</th><th style="text-align:right">Change</th><th style="text-align:right">When</th></tr></thead>
+                <tbody id="movements-table"></tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Chart -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Top Used Materials</div>
+                <div class="section-sub" id="chart-month-label"></div>
+              </div>
+            </div>
+            <div class="section-body">
+              <div id="chart-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts panel -->
+        <div class="section-card" style="align-self:start">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Alerts</div>
+              <div style="margin-top:6px" class="summary-bar">
+                <span class="summary-pill sp-red">🔴 2 Critical</span>
+                <span class="summary-pill sp-amber">⚠ 2 Warning</span>
+              </div>
+            </div>
+            <a class="section-link" onclick="showPage('alerts-page',null)">View all</a>
+          </div>
+          <div class="section-body alerts-scroll">
+            <div class="alert-group-header">
+              <span style="background:#fee2e2;padding:3px 6px;border-radius:5px"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#c0392b" stroke-width="2.5" style="display:inline;vertical-align:middle"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></span>
+              <span class="alert-group-label" style="color:#c0392b">Critical</span>
+              <span class="alert-group-count" style="background:#fee2e2;color:#c0392b">2</span>
+            </div>
+            <div class="alert-item alert-item-crit">
+              <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#c0392b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <div><div class="alert-title" style="color:#7f1d1d">Out of Stock — Impression Alginate</div><div class="alert-msg">Zero units remaining. Reorder threshold is 5 pack.</div></div>
+            </div>
+            <div class="alert-item alert-item-crit">
+              <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#c0392b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div><div class="alert-title" style="color:#7f1d1d">Expired — Temporary Composite</div><div class="alert-msg">Expired 3 days ago (Dec 28). Remove from inventory.</div></div>
+            </div>
+            <div class="alert-group-header" style="margin-top:16px">
+              <span style="background:#fffbeb;padding:3px 6px;border-radius:5px"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#b45309" stroke-width="2.5" style="display:inline;vertical-align:middle"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></span>
+              <span class="alert-group-label" style="color:#b45309">Warning</span>
+              <span class="alert-group-count" style="background:#fffbeb;color:#b45309">2</span>
+            </div>
+            <div class="alert-item alert-item-warn">
+              <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#b45309" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div><div class="alert-title" style="color:#78350f">Low Stock — IPS e.max CAD A2</div><div class="alert-msg">4 pieces remaining — 80% of 5-piece threshold.</div></div>
+            </div>
+            <div class="alert-item alert-item-warn">
+              <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#b45309" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div><div class="alert-title" style="color:#78350f">Expiring Soon — Resin Cement A2</div><div class="alert-msg">Expires in 18 days (Jan 18, 2025).</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ MATERIALS ═══════════ -->
+    <div class="page" id="page-materials">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Materials</div>
+          <div class="page-sub">47 active materials · inventory value $12,840</div>
+        </div>
+        <button class="btn-primary">+ Add Material</button>
+      </div>
+      <div class="controls-row">
+        <input class="search-box" type="search" placeholder="Search by name, SKU, category…" oninput="filterMaterials(this.value)">
+        <div class="filter-row" style="margin-bottom:0">
+          <button class="filter-chip active" onclick="filterMatStatus('all',this)">All</button>
+          <button class="filter-chip" onclick="filterMatStatus('ok',this)">In Stock</button>
+          <button class="filter-chip" onclick="filterMatStatus('low',this)">Low Stock</button>
+          <button class="filter-chip" onclick="filterMatStatus('out',this)">Out of Stock</button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Material</th><th>SKU</th><th>Category</th><th>Unit</th><th>Cost/Unit</th><th>In Stock</th><th>Status</th><th>Expiry</th></tr></thead>
+            <tbody id="materials-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ STOCK ═══════════ -->
+    <div class="page" id="page-stock">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Stock Movements</div>
+          <div class="page-sub">8 movements shown · mock data</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-green">↓ Stock In</button>
+          <button class="btn-red">↑ Stock Out</button>
+          <button class="btn-secondary">⇄ Adjust</button>
+        </div>
+      </div>
+      <div class="controls-row">
+        <input class="search-box" type="search" placeholder="Search material or reason…" oninput="filterMovements(this.value)">
+        <div class="filter-row" style="margin-bottom:0">
+          <button class="filter-chip active" onclick="filterMoveType('all',this)">All types</button>
+          <button class="filter-chip" onclick="filterMoveType('in',this)">Stock In</button>
+          <button class="filter-chip" onclick="filterMoveType('out',this)">Stock Out</button>
+          <button class="filter-chip" onclick="filterMoveType('case_usage',this)">Case Usage</button>
+          <button class="filter-chip" onclick="filterMoveType('adjustment',this)">Adjustment</button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Type</th><th>Material</th><th style="text-align:right">Change</th><th>Reason</th><th>Batch</th><th>Date</th></tr></thead>
+            <tbody id="stock-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ CASES ═══════════ -->
+    <div class="page" id="page-cases">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Cases</div>
+          <div class="page-sub">5 total cases</div>
+        </div>
+        <button class="btn-primary">+ New Case</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card" style="padding:14px"><div class="stat-label">Open Cases</div><div class="stat-value" style="color:#1d4ed8;font-size:20px">3</div></div>
+        <div class="stat-card" style="padding:14px"><div class="stat-label">Completed</div><div class="stat-value" style="color:#065f46;font-size:20px">2</div></div>
+        <div class="stat-card" style="padding:14px"><div class="stat-label">Total Revenue</div><div class="stat-value" style="font-size:18px">$2,020</div></div>
+        <div class="stat-card" style="padding:14px"><div class="stat-label">Total Profit</div><div class="stat-value" style="color:#065f46;font-size:18px">$556</div></div>
+      </div>
+      <div class="section-card">
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Case</th><th>Patient</th><th>Type</th><th>Status</th><th>Due</th><th>Cost</th><th>Price</th><th>Profit</th></tr></thead>
+            <tbody id="cases-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ REPORTS ═══════════ -->
+    <div class="page" id="page-reports">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Reports</div>
+          <div class="page-sub">Summary metrics across all completed cases</div>
+        </div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value">$14,820</div><div class="stat-sub">22 cases</div></div>
+        <div class="stat-card"><div class="stat-label">Total Cost</div><div class="stat-value">$8,934</div><div class="stat-sub">Materials + Labour + Machine</div></div>
+        <div class="stat-card"><div class="stat-label">Gross Profit</div><div class="stat-value" style="color:#065f46">$5,886</div><div class="stat-sub">39.7% margin</div></div>
+        <div class="stat-card"><div class="stat-label">Material Cost</div><div class="stat-value">$2,105</div><div class="stat-sub">From case usage</div></div>
+        <div class="stat-card"><div class="stat-label">Stock Value</div><div class="stat-value">$12,840</div><div class="stat-sub">At purchase price</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:18px">
+        <div class="section-card"><div class="section-header"><div class="section-title">Monthly Revenue vs Cost</div></div><div class="section-body" style="height:160px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px">Recharts chart — Phase 3</div></div>
+        <div class="section-card"><div class="section-header"><div class="section-title">Case Volume by Type</div></div><div class="section-body" style="height:160px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px">Recharts chart — Phase 3</div></div>
+        <div class="section-card"><div class="section-header"><div class="section-title">Most Used Materials</div></div><div class="section-body" style="height:160px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px">Recharts chart — Phase 3</div></div>
+        <div class="section-card"><div class="section-header"><div class="section-title">Profit Margin Trend</div></div><div class="section-body" style="height:160px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px">Recharts chart — Phase 3</div></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ ALERTS PAGE ═══════════ -->
+    <div class="page" id="page-alerts-page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Alerts</div>
+          <div class="page-sub">Low stock, expired, and expiring materials</div>
+        </div>
+      </div>
+      <div class="summary-bar" style="margin-bottom:20px">
+        <span class="summary-pill sp-red">🔴 2 Critical</span>
+        <span class="summary-pill sp-amber">⚠ 2 Warning</span>
+        <span class="summary-pill sp-blue">ℹ 1 Info</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:700px">
+        <div class="alert-group-header"><span class="alert-group-label" style="color:#c0392b">CRITICAL</span><span class="alert-group-count" style="background:#fee2e2;color:#c0392b">2</span></div>
+        <div class="alert-item alert-item-crit">
+          <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#c0392b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <div style="flex:1">
+            <div class="alert-title" style="color:#7f1d1d">Out of Stock — Impression Alginate</div>
+            <div class="alert-msg">Zero units remaining. Reorder threshold is 5 pack. <span class="mono" style="font-size:11px">SKU: IMP-ALG-500</span></div>
+            <div style="margin-top:8px;height:6px;background:#fecaca;border-radius:3px;overflow:hidden"><div style="width:0%;height:100%;background:#c0392b;border-radius:3px"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#c0392b;margin-top:3px"><span>0 pack</span><span>min: 5</span></div>
+            <a style="font-size:11px;color:var(--primary);cursor:pointer;margin-top:6px;display:inline-block" onclick="showPage('materials',null)">View in Materials →</a>
+          </div>
+        </div>
+        <div class="alert-item alert-item-crit">
+          <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#c0392b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <div style="flex:1">
+            <div class="alert-title" style="color:#7f1d1d">Expired — Temporary Composite A2</div>
+            <div class="alert-msg">Expired 3 days ago (Dec 28, 2024). 6 syringes in stock — remove from inventory. <span class="mono" style="font-size:11px">SKU: TMP-COMP-A2</span></div>
+            <a style="font-size:11px;color:var(--primary);cursor:pointer;margin-top:6px;display:inline-block" onclick="showPage('materials',null)">View in Materials →</a>
+          </div>
+        </div>
+        <div class="alert-group-header" style="margin-top:12px"><span class="alert-group-label" style="color:#b45309">WARNING</span><span class="alert-group-count" style="background:#fffbeb;color:#b45309">2</span></div>
+        <div class="alert-item alert-item-warn">
+          <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#b45309" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div style="flex:1">
+            <div class="alert-title" style="color:#78350f">Low Stock — IPS e.max CAD A2</div>
+            <div class="alert-msg">4 pieces remaining (80% of 5-piece threshold). <span class="mono" style="font-size:11px">SKU: IPS-EMAXCAD-A2</span></div>
+            <div style="margin-top:8px;height:6px;background:#fde68a;border-radius:3px;overflow:hidden"><div style="width:80%;height:100%;background:#f59e0b;border-radius:3px"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#b45309;margin-top:3px"><span>4 piece</span><span>min: 5</span></div>
+          </div>
+        </div>
+        <div class="alert-item alert-item-warn">
+          <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#b45309" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <div style="flex:1">
+            <div class="alert-title" style="color:#78350f">Expiring Soon — Resin Cement A2</div>
+            <div class="alert-msg">Expires in 18 days (Jan 18, 2025). 3 syringes in stock. <span class="mono" style="font-size:11px">SKU: RES-CEM-A2</span></div>
+          </div>
+        </div>
+        <div class="alert-group-header" style="margin-top:12px"><span class="alert-group-label" style="color:#1d4ed8">INFO</span><span class="alert-group-count" style="background:#eff6ff;color:#1d4ed8">1</span></div>
+        <div class="alert-item" style="background:#eff6ff;border-color:#bfdbfe">
+          <svg class="alert-icon" fill="none" viewBox="0 0 24 24" stroke="#1d4ed8" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <div class="alert-title" style="color:#1e3a8a">Expiry Notice — Vita Zirconia HT</div>
+            <div class="alert-msg">Expires in 45 days (Feb 14, 2025). 850g in stock.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const now = new Date();
+
+function minsAgo(n) { return new Date(now - n*60000); }
+function timeAgo(d) {
+  const m = Math.round((now - new Date(d)) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m/60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h/24) + 'd ago';
+}
+function fmtCurrency(n) { return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(n); }
+
+const MOVEMENTS = [
+  {type:'in',         qty:50,  cost:8.40,  reason:'Monthly restock',      mat:'IPS e.max CAD A2',     unit:'piece', batch:'BT-2025-001', when: minsAgo(12)},
+  {type:'case_usage', qty:3,   cost:null,  reason:null,                   mat:'Vita Zirconia HT',     unit:'g',     batch:null,          when: minsAgo(47)},
+  {type:'out',        qty:5,   cost:null,  reason:'Damaged on trim',      mat:'Temporary Crown Resin',unit:'piece', batch:null,          when: minsAgo(95)},
+  {type:'in',         qty:200, cost:0.45,  reason:null,                   mat:'Impression Putty Base',unit:'ml',    batch:'BT-2025-002', when: minsAgo(180)},
+  {type:'adjustment', qty:2,   cost:null,  reason:'Stocktake correction', mat:'IPS e.max CAD A2',     unit:'piece', batch:null,          when: minsAgo(310)},
+  {type:'case_usage', qty:8,   cost:null,  reason:null,                   mat:'Zirconia Disc 98mm',   unit:'g',     batch:null,          when: minsAgo(420)},
+  {type:'return',     qty:10,  cost:2.10,  reason:'Supplier return',      mat:'Metal Bond Ceramic',   unit:'g',     batch:null,          when: minsAgo(600)},
+  {type:'expired',    qty:4,   cost:null,  reason:'Past expiry date',     mat:'Impression Alginate',  unit:'pack',  batch:'BT-2024-088', when: minsAgo(900)},
+];
+
+const TYPE_CFG = {
+  in:         {label:'Stock In',    badge:'badge-green', sign:'+'},
+  out:        {label:'Stock Out',   badge:'badge-red',   sign:'−'},
+  case_usage: {label:'Case Usage',  badge:'badge-blue',  sign:'−'},
+  adjustment: {label:'Adjustment',  badge:'badge-violet',sign:'+'},
+  return:     {label:'Return',      badge:'badge-amber', sign:'+'},
+  expired:    {label:'Expired',     badge:'badge-slate', sign:'−'},
+};
+
+const MATERIALS = [
+  {name:'IPS e.max CAD A2 LT',   sku:'IPS-EMAXCAD-A2LT', cat:'Ceramic',    unit:'piece',   qty:4,   threshold:5,  cost:8.40,  expiry:'—',          status:'low'},
+  {name:'Vita Zirconia HT',      sku:'VITA-ZIRC-HT',     cat:'Zirconia',   unit:'g',       qty:850, threshold:200,cost:0.60,  expiry:'Sep 15 2025', status:'ok'},
+  {name:'Impression Alginate',   sku:'IMP-ALG-500',      cat:'Impression', unit:'pack',    qty:0,   threshold:5,  cost:4.20,  expiry:'Jun 30 2025', status:'out'},
+  {name:'Temporary Composite A2',sku:'TMP-COMP-A2',      cat:'Composite',  unit:'syringe', qty:6,   threshold:2,  cost:14.90, expiry:'Dec 28 2024', status:'ok'},
+  {name:'Zirconia Disc 98mm',    sku:'ZIRC-DISC-98',     cat:'Zirconia',   unit:'piece',   qty:12,  threshold:4,  cost:28.50, expiry:'—',          status:'ok'},
+  {name:'Resin Cement A2',       sku:'RES-CEM-A2',       cat:'Cements',    unit:'syringe', qty:3,   threshold:2,  cost:19.80, expiry:'Jan 18 2025', status:'ok'},
+  {name:'Impression Putty Base', sku:'IMP-PUTTY-BASE',   cat:'Impression', unit:'ml',      qty:400, threshold:100,cost:0.45,  expiry:'Nov 1 2025',  status:'ok'},
+  {name:'Metal Bond Ceramic',    sku:'MET-BOND-CER',     cat:'Ceramic',    unit:'g',       qty:55,  threshold:20, cost:1.50,  expiry:'—',          status:'ok'},
+];
+
+const STATUS_BADGE = {
+  ok:  '<span class="badge badge-green">● In Stock</span>',
+  low: '<span class="badge badge-amber">▲ Low Stock</span>',
+  out: '<span class="badge badge-red">✕ Out of Stock</span>',
+};
+
+const CASES = [
+  {code:'CASE-2025-0014', patient:'Maria Ionescu',   clinic:'Smile Dental',    type:'Crown',         status:'in_progress',      due:'Jan 12 2025', cost:187.30, price:320, profit:132.70},
+  {code:'CASE-2025-0013', patient:'Ion Vasile',       clinic:'Oradea Dent',     type:'Bridge',        status:'awaiting_approval',due:'Jan 10 2025', cost:468.50, price:750, profit:281.50},
+  {code:'CASE-2025-0012', patient:'Elena Dumitrescu', clinic:'Cluj Pro Dental', type:'Veneer',        status:'completed',        due:'Jan 4 2025',  cost:329.10, price:550, profit:220.90},
+  {code:'CASE-2025-0011', patient:'Andrei Popa',      clinic:'Timis Dental',    type:'Full Denture',  status:'draft',            due:'—',           cost:0,      price:0,   profit:0},
+  {code:'CASE-2025-0010', patient:'Cristina Marian',  clinic:'Smile Dental',    type:'Implant Crown', status:'delivered',        due:'Dec 30 2024', cost:615,    price:950, profit:335},
+];
+
+const STATUS_STYLE = {
+  draft:             {dot:'#94a3b8', badge:'badge-slate'},
+  in_progress:       {dot:'#3b82f6', badge:'badge-blue'},
+  awaiting_approval: {dot:'#f59e0b', badge:'badge-amber'},
+  completed:         {dot:'#10b981', badge:'badge-green'},
+  delivered:         {dot:'#047857', badge:'badge-green'},
+  cancelled:         {dot:'#ef4444', badge:'badge-red'},
+};
+const STATUS_LABEL = {
+  draft:'Draft', in_progress:'In Progress', awaiting_approval:'Awaiting Approval',
+  completed:'Completed', delivered:'Delivered', cancelled:'Cancelled',
+};
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard:'Dashboard', materials:'Materials', stock:'Stock Movements',
+  cases:'Cases', reports:'Reports', 'alerts-page':'Alerts'
+};
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[id] || 'Dental Lab';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// ── Render movements table ────────────────────────────────────────────────────
+let movFilter = {search:'', type:'all'};
+
+function renderMovements() {
+  const tbody = document.getElementById('movements-table');
+  if (!tbody) return;
+  const rows = MOVEMENTS.filter(m => {
+    if (movFilter.type !== 'all' && m.type !== movFilter.type) return false;
+    if (movFilter.search && !m.mat.toLowerCase().includes(movFilter.search) && !(m.reason||'').toLowerCase().includes(movFilter.search)) return false;
+    return true;
+  });
+  const cfg = {
+    in:{l:'Stock In',bg:'#dcfce7',c:'#15803d'},out:{l:'Stock Out',bg:'#fee2e2',c:'#c0392b'},
+    case_usage:{l:'Case Usage',bg:'#dbeafe',c:'#1d4ed8'},adjustment:{l:'Adjustment',bg:'#f3e8ff',c:'#6d28d9'},
+    return:{l:'Return',bg:'#fef3c7',c:'#b45309'},expired:{l:'Expired',bg:'#f1f5f9',c:'#64748b'}
+  };
+  const debit = new Set(['out','case_usage','expired']);
+  tbody.innerHTML = rows.map(m => {
+    const c = cfg[m.type] || cfg.adjustment;
+    const sign = debit.has(m.type) ? '−' : '+';
+    const qClass = debit.has(m.type) ? 'qty-neg' : 'qty-pos';
+    return `<tr>
+      <td><span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:${c.bg};color:${c.c}">${c.l}</span></td>
+      <td><div style="font-weight:500">${m.mat}</div>${m.reason?`<div style="font-size:11px;color:var(--text-muted)">${m.reason}</div>`:''}</td>
+      <td style="text-align:right"><span class="${qClass}">${sign}${m.qty} ${m.unit}</span></td>
+      <td style="text-align:right;color:var(--text-muted);font-size:12px">${timeAgo(m.when)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">No movements match</td></tr>';
+
+  // Also update stock page table
+  const stbody = document.getElementById('stock-table');
+  if (stbody) {
+    stbody.innerHTML = rows.map(m => {
+      const c = cfg[m.type] || cfg.adjustment;
+      const sign = debit.has(m.type) ? '−' : '+';
+      const qClass = debit.has(m.type) ? 'qty-neg' : 'qty-pos';
+      return `<tr>
+        <td><span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:${c.bg};color:${c.c}">${c.l}</span></td>
+        <td style="font-weight:500">${m.mat}</td>
+        <td style="text-align:right"><span class="${qClass}">${sign}${m.qty} ${m.unit}</span></td>
+        <td style="color:var(--text-muted);font-size:12px">${m.reason||'—'}</td>
+        <td class="mono" style="font-size:11px;color:var(--text-muted)">${m.batch||'—'}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${timeAgo(m.when)}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">No movements match</td></tr>';
+  }
+}
+
+function filterMovements(val) { movFilter.search = val.toLowerCase(); renderMovements(); }
+function filterMoveType(type, btn) {
+  movFilter.type = type;
+  document.querySelectorAll('#page-stock .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderMovements();
+}
+
+// ── Render materials table ────────────────────────────────────────────────────
+let matFilter = {search:'', status:'all'};
+
+function renderMaterials() {
+  const tbody = document.getElementById('materials-table');
+  const rows = MATERIALS.filter(m => {
+    if (matFilter.status !== 'all' && m.status !== matFilter.status) return false;
+    if (matFilter.search) {
+      const q = matFilter.search;
+      if (!m.name.toLowerCase().includes(q) && !m.sku.toLowerCase().includes(q) && !m.cat.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+  const pct = m => m.threshold > 0 ? Math.min(m.qty/m.threshold*100, 100) : 0;
+  const barC = m => ({ok:'#10b981',low:'#f59e0b',out:'#ef4444'}[m.status]);
+  tbody.innerHTML = rows.map(m => `<tr>
+    <td>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="padding:6px;background:#eff6ff;border-radius:7px"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#1d4ed8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+        <span style="font-weight:500">${m.name}</span>
+      </div>
+    </td>
+    <td class="mono" style="font-size:11px;color:var(--text-muted)">${m.sku}</td>
+    <td style="color:var(--text-muted)">${m.cat}</td>
+    <td style="color:var(--text-muted)">${m.unit}</td>
+    <td>${fmtCurrency(m.cost)}</td>
+    <td>
+      <span style="font-weight:600">${m.qty} ${m.unit}</span>
+      <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:${pct(m)}%;background:${barC(m)}"></div></div>
+    </td>
+    <td>${STATUS_BADGE[m.status]}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${m.expiry}</td>
+  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted)">No materials match</td></tr>';
+}
+
+function filterMaterials(val) { matFilter.search = val.toLowerCase(); renderMaterials(); }
+function filterMatStatus(status, btn) {
+  matFilter.status = status;
+  document.querySelectorAll('#page-materials .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderMaterials();
+}
+
+// ── Render cases table ────────────────────────────────────────────────────────
+function renderCases() {
+  const tbody = document.getElementById('cases-table');
+  tbody.innerHTML = CASES.map(c => {
+    const ss = STATUS_STYLE[c.status];
+    const pClass = c.profit > 0 ? 'profit-pos' : c.profit < 0 ? 'profit-neg' : '';
+    return `<tr>
+      <td class="mono" style="font-size:11px;font-weight:700;color:var(--primary)">${c.code}</td>
+      <td><div style="font-weight:500">${c.patient}</div><div style="font-size:11px;color:var(--text-muted)">${c.clinic}</div></td>
+      <td style="color:var(--text-muted);font-size:12px">${c.type}</td>
+      <td><span class="badge ${ss.badge}"><span class="badge-dot" style="background:${ss.dot}"></span>${STATUS_LABEL[c.status]}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${c.due}</td>
+      <td style="font-size:12px">${c.cost>0?fmtCurrency(c.cost):'—'}</td>
+      <td style="font-size:12px">${c.price>0?fmtCurrency(c.price):'—'}</td>
+      <td class="${pClass}" style="font-size:12px">${c.cost>0?fmtCurrency(c.profit):'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Recharts chart ────────────────────────────────────────────────────────────
+function renderChart() {
+  const container = document.getElementById('chart-container');
+  if (!container || !window.Recharts) return;
+
+  const data = [
+    {name:'IPS e.max CAD A2',   qty:42},
+    {name:'Vita Zirconia HT',   qty:38},
+    {name:'Zirconia Disc 98mm', qty:21},
+    {name:'Impression Putty',   qty:18},
+    {name:'Temp Crown Resin',   qty:14},
+    {name:'Metal Bond Ceramic', qty:10},
+    {name:'Wax Pattern Mat.',   qty:8},
+    {name:'Resin Cement A2',    qty:5},
+  ].map(d => ({...d, shortName: d.name.length>20 ? d.name.slice(0,18)+'…' : d.name}));
+
+  const COLORS = ['#1d6b4a','#1d4ed8','#7c3aed','#b45309','#c0392b','#0891b2','#4f46e5','#059669'];
+
+  const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveContainer } = Recharts;
+
+  const e = React.createElement;
+  const chart = e(ResponsiveContainer, {width:'100%', height:220},
+    e(BarChart, {data, layout:'vertical', margin:{top:4,right:16,bottom:4,left:0}, barCategoryGap:'25%'},
+      e(CartesianGrid, {strokeDasharray:'3 3', horizontal:false, stroke:'#e5e3dc'}),
+      e(XAxis, {type:'number', tick:{fontSize:10, fill:'#78756e'}, axisLine:false, tickLine:false}),
+      e(YAxis, {dataKey:'shortName', type:'category', width:125, tick:{fontSize:10.5, fill:'#78756e'}, axisLine:false, tickLine:false}),
+      e(Tooltip, {contentStyle:{borderRadius:'10px',border:'1px solid #e5e3dc',background:'white',fontSize:'12px',padding:'10px 14px'}, cursor:{fill:'rgba(0,0,0,0.04)'}}),
+      e(Bar, {dataKey:'qty', radius:[0,5,5,0], maxBarSize:18},
+        data.map((_, i) => e(Cell, {key:i, fill:COLORS[i % COLORS.length]}))
+      )
+    )
+  );
+  ReactDOM.render(chart, container);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthName = months[now.getMonth()] + ' ' + now.getFullYear();
+  const dashMonth = document.getElementById('dash-month');
+  if (dashMonth) dashMonth.textContent = monthName;
+  const chartLabel = document.getElementById('chart-month-label');
+  if (chartLabel) chartLabel.textContent = 'By quantity consumed · ' + months[now.getMonth()];
+
+  renderMovements();
+  renderMaterials();
+  renderCases();
+
+  // Retry chart render until Recharts CDN loads
+  let attempts = 0;
+  const tryChart = setInterval(() => {
+    attempts++;
+    if (window.Recharts && window.React && window.ReactDOM) {
+      renderChart();
+      clearInterval(tryChart);
+    }
+    if (attempts > 30) clearInterval(tryChart);
+  }, 200);
+});
+</script>
+</body>
+</html>
