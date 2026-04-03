@@ -37,7 +37,7 @@ export function DeleteMaterialButton({ materialId, materialName }: Props) {
         onClick={() => setConfirming(true)}
         className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground
                    hover:text-destructive transition-colors"
-        aria-label={`Deactivate ${materialName}`}
+        aria-label={`Dezactivează ${materialName}`}
         title="Dezactivează materialul"
       >
         <Trash2 className="w-3.5 h-3.5" />
@@ -50,7 +50,7 @@ export function DeleteMaterialButton({ materialId, materialName }: Props) {
     <div className="flex items-center gap-1.5 bg-destructive/5 border border-destructive/20
                     rounded-lg px-2 py-1 text-xs">
       <AlertCircle className="w-3 h-3 text-destructive shrink-0" />
-      <span className="text-destructive font-medium whitespace-nowrap">Deactivate?</span>
+      <span className="text-destructive font-medium whitespace-nowrap">Dezactivezi?</span>
       <button
         onClick={handleDelete}
         disabled={isPending}
@@ -59,7 +59,7 @@ export function DeleteMaterialButton({ materialId, materialName }: Props) {
                    flex items-center gap-1 transition-colors"
       >
         {isPending && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
-        Yes
+        Da
       </button>
       <button
         onClick={() => setConfirming(false)}
@@ -67,7 +67,7 @@ export function DeleteMaterialButton({ materialId, materialName }: Props) {
         className="px-2 py-0.5 rounded border font-medium hover:bg-accent
                    disabled:opacity-50 transition-colors"
       >
-        No
+        Nu
       </button>
     </div>
   )

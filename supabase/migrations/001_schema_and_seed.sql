@@ -52,6 +52,52 @@ CREATE TYPE work_type AS ENUM (
 
 
 -- ============================================================
+-- ENUM: user_role
+-- ============================================================
+
+CREATE TYPE user_role AS ENUM ('admin', 'manager', 'technician');
+
+
+-- ============================================================
+-- TABLE: profiles
+-- One row per authenticated user. Created automatically by
+-- fn_handle_new_user trigger when a user signs up via Supabase Auth.
+-- ============================================================
+
+CREATE TABLE profiles (
+  id          UUID          PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email       TEXT          NOT NULL,
+  full_name   TEXT          NOT NULL DEFAULT '',
+  role        user_role     NOT NULL DEFAULT 'technician',
+  avatar_url  TEXT,
+  phone       TEXT,
+  is_active   BOOLEAN       NOT NULL DEFAULT true,
+  created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+-- Auto-create a profile row when a new user registers
+CREATE OR REPLACE FUNCTION fn_handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'technician')
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION fn_handle_new_user();
+
+
+-- ============================================================
 -- TABLE: categories
 -- Groups materials into logical families (ceramics, alloys…).
 -- ============================================================
@@ -411,24 +457,24 @@ CREATE TRIGGER trg_gen_case_code
 -- Categories ─────────────────────────────────────────────────
 
 INSERT INTO categories (id, name, description, color) VALUES
-  ('cat-00000000-0000-0000-0000-000000000001', 'Ceramics',        'Feldspathic, zirconia, and lithium disilicate materials', '#3B82F6'),
-  ('cat-00000000-0000-0000-0000-000000000002', 'Metal Alloys',    'Base metal, precious, and semi-precious casting alloys',  '#EAB308'),
-  ('cat-00000000-0000-0000-0000-000000000003', 'Impression',      'Alginate, silicone, and polyether impression materials',  '#8B5CF6'),
-  ('cat-00000000-0000-0000-0000-000000000004', 'Gypsum / Stone',  'Die stone, model plaster, and investment materials',      '#F97316'),
-  ('cat-00000000-0000-0000-0000-000000000005', 'Adhesives & Cements', 'Resin cements, bonding agents, and glazes',           '#EC4899'),
-  ('cat-00000000-0000-0000-0000-000000000006', 'Wax & Resin',     'Pattern wax, bite registration, and modelling resin',    '#14B8A6'),
-  ('cat-00000000-0000-0000-0000-000000000007', 'Consumables',     'Polishing discs, burs, sandpaper, and lab sundries',     '#6B7280');
+  ('00000000-0000-0000-0001-000000000001', 'Ceramics',        'Feldspathic, zirconia, and lithium disilicate materials', '#3B82F6'),
+  ('00000000-0000-0000-0001-000000000002', 'Metal Alloys',    'Base metal, precious, and semi-precious casting alloys',  '#EAB308'),
+  ('00000000-0000-0000-0001-000000000003', 'Impression',      'Alginate, silicone, and polyether impression materials',  '#8B5CF6'),
+  ('00000000-0000-0000-0001-000000000004', 'Gypsum / Stone',  'Die stone, model plaster, and investment materials',      '#F97316'),
+  ('00000000-0000-0000-0001-000000000005', 'Adhesives & Cements', 'Resin cements, bonding agents, and glazes',           '#EC4899'),
+  ('00000000-0000-0000-0001-000000000006', 'Wax & Resin',     'Pattern wax, bite registration, and modelling resin',    '#14B8A6'),
+  ('00000000-0000-0000-0001-000000000007', 'Consumables',     'Polishing discs, burs, sandpaper, and lab sundries',     '#6B7280');
 
 
 -- Suppliers ───────────────────────────────────────────────────
 
 INSERT INTO suppliers (id, name, contact_name, email, phone, website) VALUES
-  ('sup-00000000-0000-0000-0000-000000000001', 'Ivoclar Vivadent',  'James Hooper',  'orders@ivoclar.com',          '+1-800-533-6825', 'https://www.ivoclar.com'),
-  ('sup-00000000-0000-0000-0000-000000000002', 'Dentsply Sirona',   'Linda Marsh',   'labsupply@dentsply.com',      '+1-800-877-0020', 'https://www.dentsplysirona.com'),
-  ('sup-00000000-0000-0000-0000-000000000003', 'GC Corporation',    'Kenji Watanabe','gcamerica@gcamerica.com',     '+1-800-323-7063', 'https://www.gcamerica.com'),
-  ('sup-00000000-0000-0000-0000-000000000004', 'Shofu Dental',      'Maria Santos',  'info@shofu.com',              '+1-800-827-4638', 'https://www.shofu.com'),
-  ('sup-00000000-0000-0000-0000-000000000005', 'Renfert GmbH',      'Klaus Weber',   'info@renfert.com',            '+49-7741-2008-0', 'https://www.renfert.com'),
-  ('sup-00000000-0000-0000-0000-000000000006', 'Whip Mix',          'Carol Jensen',  'customerservice@whipmix.com', '+1-800-626-5651', 'https://www.whipmix.com');
+  ('00000000-0000-0000-0002-000000000001', 'Ivoclar Vivadent',  'James Hooper',  'orders@ivoclar.com',          '+1-800-533-6825', 'https://www.ivoclar.com'),
+  ('00000000-0000-0000-0002-000000000002', 'Dentsply Sirona',   'Linda Marsh',   'labsupply@dentsply.com',      '+1-800-877-0020', 'https://www.dentsplysirona.com'),
+  ('00000000-0000-0000-0002-000000000003', 'GC Corporation',    'Kenji Watanabe','gcamerica@gcamerica.com',     '+1-800-323-7063', 'https://www.gcamerica.com'),
+  ('00000000-0000-0000-0002-000000000004', 'Shofu Dental',      'Maria Santos',  'info@shofu.com',              '+1-800-827-4638', 'https://www.shofu.com'),
+  ('00000000-0000-0000-0002-000000000005', 'Renfert GmbH',      'Klaus Weber',   'info@renfert.com',            '+49-7741-2008-0', 'https://www.renfert.com'),
+  ('00000000-0000-0000-0002-000000000006', 'Whip Mix',          'Carol Jensen',  'customerservice@whipmix.com', '+1-800-626-5651', 'https://www.whipmix.com');
 
 
 -- Materials ───────────────────────────────────────────────────
@@ -437,128 +483,128 @@ INSERT INTO materials
   (id, name, sku, category_id, supplier_id, unit, quantity, min_threshold, cost_per_unit, expiry_date, location, notes)
 VALUES
   -- Ceramics
-  ('mat-00000000-0000-0000-0000-000000000001',
+  ('00000000-0000-0000-0003-000000000001',
    'IPS e.max CAD Block A2 LT C14',
    'IPS-EMAXCAD-A2LT-C14',
-   'cat-00000000-0000-0000-0000-000000000001',
-   'sup-00000000-0000-0000-0000-000000000001',
+   '00000000-0000-0000-0001-000000000001',
+   '00000000-0000-0000-0002-000000000001',
    'piece', 40, 10, 18.50, NULL, 'Shelf A-1',
    'Lithium disilicate CAD/CAM block for anterior crowns'),
 
-  ('mat-00000000-0000-0000-0000-000000000002',
+  ('00000000-0000-0000-0003-000000000002',
    'IPS e.max CAD Block B1 HT C14',
    'IPS-EMAXCAD-B1HT-C14',
-   'cat-00000000-0000-0000-0000-000000000001',
-   'sup-00000000-0000-0000-0000-000000000001',
+   '00000000-0000-0000-0001-000000000001',
+   '00000000-0000-0000-0002-000000000001',
    'piece', 28, 10, 18.50, NULL, 'Shelf A-1',
    'High translucency lithium disilicate block'),
 
-  ('mat-00000000-0000-0000-0000-000000000003',
+  ('00000000-0000-0000-0003-000000000003',
    'Zirconia Disc 98mm A2 Multi-Layer',
    'ZIRC-98-A2-ML',
-   'cat-00000000-0000-0000-0000-000000000001',
-   'sup-00000000-0000-0000-0000-000000000002',
+   '00000000-0000-0000-0001-000000000001',
+   '00000000-0000-0000-0002-000000000002',
    'piece', 15, 5, 44.00, NULL, 'Shelf A-2',
    '98mm milling disc, full contour zirconia'),
 
-  ('mat-00000000-0000-0000-0000-000000000004',
+  ('00000000-0000-0000-0003-000000000004',
    'IPS Ivocolor Essence E01 White',
    'IPS-IVOCOLOR-E01',
-   'cat-00000000-0000-0000-0000-000000000001',
-   'sup-00000000-0000-0000-0000-000000000001',
+   '00000000-0000-0000-0001-000000000001',
+   '00000000-0000-0000-0002-000000000001',
    'g', 12, 4, 6.80, '2026-03-31', 'Cabinet B-3',
    'Staining liquid for IPS e.max characterisation'),
 
-  ('mat-00000000-0000-0000-0000-000000000005',
+  ('00000000-0000-0000-0003-000000000005',
    'Shofu Ceramage Dentin A2',
    'SHO-CER-DEN-A2',
-   'cat-00000000-0000-0000-0000-000000000001',
-   'sup-00000000-0000-0000-0000-000000000004',
+   '00000000-0000-0000-0001-000000000001',
+   '00000000-0000-0000-0002-000000000004',
    'g', 50, 15, 5.20, '2026-08-15', 'Cabinet B-3',
    'Supranano composite ceramic for layering technique'),
 
   -- Metal alloys
-  ('mat-00000000-0000-0000-0000-000000000006',
+  ('00000000-0000-0000-0003-000000000006',
    'Degudent U Base Metal Alloy',
    'DEG-U-ALLOY-100G',
-   'cat-00000000-0000-0000-0000-000000000002',
-   'sup-00000000-0000-0000-0000-000000000002',
+   '00000000-0000-0000-0001-000000000002',
+   '00000000-0000-0000-0002-000000000002',
    'g', 300, 50, 0.92, NULL, 'Safe D-1',
    'Ni-Cr-Mo alloy for metal-ceramic restorations'),
 
-  ('mat-00000000-0000-0000-0000-000000000007',
+  ('00000000-0000-0000-0003-000000000007',
    'Bellabond Plus Gold Alloy',
    'BELLA-GOLD-PLUS',
-   'cat-00000000-0000-0000-0000-000000000002',
-   'sup-00000000-0000-0000-0000-000000000005',
+   '00000000-0000-0000-0001-000000000002',
+   '00000000-0000-0000-0002-000000000005',
    'g', 80, 20, 58.40, NULL, 'Safe D-2',
    'High-gold alloy 86.0 Au for full-cast crowns'),
 
   -- Impression materials
-  ('mat-00000000-0000-0000-0000-000000000008',
+  ('00000000-0000-0000-0003-000000000008',
    'Zhermack Elite HD+ Light Body',
    'ZHE-ELITE-HDFLD',
-   'cat-00000000-0000-0000-0000-000000000003',
-   'sup-00000000-0000-0000-0000-000000000003',
+   '00000000-0000-0000-0001-000000000003',
+   '00000000-0000-0000-0002-000000000003',
    'ml', 240, 50, 0.18, '2025-11-30', 'Fridge F-1',
    'A-silicone VPS, light body wash for final impressions'),
 
-  ('mat-00000000-0000-0000-0000-000000000009',
+  ('00000000-0000-0000-0003-000000000009',
    'GC Fuji Rock EP Die Stone',
    'GC-FUJIROCK-EP-3KG',
-   'cat-00000000-0000-0000-0000-000000000004',
-   'sup-00000000-0000-0000-0000-000000000003',
+   '00000000-0000-0000-0001-000000000004',
+   '00000000-0000-0000-0002-000000000003',
    'kg', 9, 2, 22.00, NULL, 'Shelf C-1',
    'Type IV die stone, 3 kg bag, ivory'),
 
   -- Wax & Resin
-  ('mat-00000000-0000-0000-0000-000000000010',
+  ('00000000-0000-0000-0003-000000000010',
    'GC Pattern Resin LS',
    'GC-PATTERN-LS-100G',
-   'cat-00000000-0000-0000-0000-000000000006',
-   'sup-00000000-0000-0000-0000-000000000003',
+   '00000000-0000-0000-0001-000000000006',
+   '00000000-0000-0000-0002-000000000003',
    'g', 45, 20, 0.38, '2025-09-30', 'Cabinet B-4',
    'Low-shrinkage autopolymerising pattern resin'),
 
-  ('mat-00000000-0000-0000-0000-000000000011',
+  ('00000000-0000-0000-0003-000000000011',
    'Renfert Geo Hard Wax Pink',
    'REN-GEO-HARD-PINK',
-   'cat-00000000-0000-0000-0000-000000000006',
-   'sup-00000000-0000-0000-0000-000000000005',
+   '00000000-0000-0000-0001-000000000006',
+   '00000000-0000-0000-0002-000000000005',
    'g', 200, 50, 0.12, NULL, 'Shelf C-3',
    'Hard modelling wax for full-arch wax-ups'),
 
   -- Adhesives
-  ('mat-00000000-0000-0000-0000-000000000012',
+  ('00000000-0000-0000-0003-000000000012',
    'Ivoclar Variolink Esthetic DC Base',
    'IPS-VARIOL-EST-DC',
-   'cat-00000000-0000-0000-0000-000000000005',
-   'sup-00000000-0000-0000-0000-000000000001',
+   '00000000-0000-0000-0001-000000000005',
+   '00000000-0000-0000-0002-000000000001',
    'ml', 8, 2, 34.60, '2026-01-31', 'Fridge F-2',
    'Dual-cure resin cement for ceramic restorations'),
 
   -- Consumables
-  ('mat-00000000-0000-0000-0000-000000000013',
+  ('00000000-0000-0000-0003-000000000013',
    'Shofu Brownie Polishing Points (pack/12)',
    'SHO-BROWNIE-12PK',
-   'cat-00000000-0000-0000-0000-000000000007',
-   'sup-00000000-0000-0000-0000-000000000004',
+   '00000000-0000-0000-0001-000000000007',
+   '00000000-0000-0000-0002-000000000004',
    'pack', 8, 3, 9.20, NULL, 'Drawer P-1',
    'Pre-polishing rubber points for composite and ceramics'),
 
-  ('mat-00000000-0000-0000-0000-000000000014',
+  ('00000000-0000-0000-0003-000000000014',
    'Diamond Bur FG 856-016 (pack/5)',
    'BUR-FG-856-016-5PK',
-   'cat-00000000-0000-0000-0000-000000000007',
-   'sup-00000000-0000-0000-0000-000000000006',
+   '00000000-0000-0000-0001-000000000007',
+   '00000000-0000-0000-0002-000000000006',
    'pack', 6, 2, 14.50, NULL, 'Drawer P-2',
    'Flame-shaped coarse diamond burs for zirconia'),
 
-  ('mat-00000000-0000-0000-0000-000000000015',
+  ('00000000-0000-0000-0003-000000000015',
    'Disposable Mixing Tips Blue (bag/50)',
    'MIX-TIP-BLUE-50',
-   'cat-00000000-0000-0000-0000-000000000007',
-   'sup-00000000-0000-0000-0000-000000000006',
+   '00000000-0000-0000-0001-000000000007',
+   '00000000-0000-0000-0002-000000000006',
    'pack', 12, 4, 4.80, NULL, 'Drawer P-3',
    'Universal automix tips for VPS and polyether cartridges');
 
@@ -568,21 +614,21 @@ VALUES
 INSERT INTO stock_movements
   (material_id, movement_type, quantity, unit_cost, reason, batch_number)
 VALUES
-  ('mat-00000000-0000-0000-0000-000000000001', 'in', 40, 18.50, 'Initial stock receive', 'PO-2024-001'),
-  ('mat-00000000-0000-0000-0000-000000000002', 'in', 28, 18.50, 'Initial stock receive', 'PO-2024-001'),
-  ('mat-00000000-0000-0000-0000-000000000003', 'in', 15, 44.00, 'Initial stock receive', 'PO-2024-001'),
-  ('mat-00000000-0000-0000-0000-000000000004', 'in', 12,  6.80, 'Initial stock receive', 'PO-2024-002'),
-  ('mat-00000000-0000-0000-0000-000000000005', 'in', 50,  5.20, 'Initial stock receive', 'PO-2024-002'),
-  ('mat-00000000-0000-0000-0000-000000000006', 'in', 300, 0.92, 'Initial stock receive', 'PO-2024-003'),
-  ('mat-00000000-0000-0000-0000-000000000007', 'in', 80, 58.40, 'Initial stock receive', 'PO-2024-003'),
-  ('mat-00000000-0000-0000-0000-000000000008', 'in', 240, 0.18, 'Initial stock receive', 'PO-2024-004'),
-  ('mat-00000000-0000-0000-0000-000000000009', 'in', 9,  22.00, 'Initial stock receive', 'PO-2024-004'),
-  ('mat-00000000-0000-0000-0000-000000000010', 'in', 45,  0.38, 'Initial stock receive', 'PO-2024-005'),
-  ('mat-00000000-0000-0000-0000-000000000011', 'in', 200, 0.12, 'Initial stock receive', 'PO-2024-005'),
-  ('mat-00000000-0000-0000-0000-000000000012', 'in', 8,  34.60, 'Initial stock receive', 'PO-2024-006'),
-  ('mat-00000000-0000-0000-0000-000000000013', 'in', 8,   9.20, 'Initial stock receive', 'PO-2024-006'),
-  ('mat-00000000-0000-0000-0000-000000000014', 'in', 6,  14.50, 'Initial stock receive', 'PO-2024-007'),
-  ('mat-00000000-0000-0000-0000-000000000015', 'in', 12,  4.80, 'Initial stock receive', 'PO-2024-007');
+  ('00000000-0000-0000-0003-000000000001', 'in', 40, 18.50, 'Initial stock receive', 'PO-2024-001'),
+  ('00000000-0000-0000-0003-000000000002', 'in', 28, 18.50, 'Initial stock receive', 'PO-2024-001'),
+  ('00000000-0000-0000-0003-000000000003', 'in', 15, 44.00, 'Initial stock receive', 'PO-2024-001'),
+  ('00000000-0000-0000-0003-000000000004', 'in', 12,  6.80, 'Initial stock receive', 'PO-2024-002'),
+  ('00000000-0000-0000-0003-000000000005', 'in', 50,  5.20, 'Initial stock receive', 'PO-2024-002'),
+  ('00000000-0000-0000-0003-000000000006', 'in', 300, 0.92, 'Initial stock receive', 'PO-2024-003'),
+  ('00000000-0000-0000-0003-000000000007', 'in', 80, 58.40, 'Initial stock receive', 'PO-2024-003'),
+  ('00000000-0000-0000-0003-000000000008', 'in', 240, 0.18, 'Initial stock receive', 'PO-2024-004'),
+  ('00000000-0000-0000-0003-000000000009', 'in', 9,  22.00, 'Initial stock receive', 'PO-2024-004'),
+  ('00000000-0000-0000-0003-000000000010', 'in', 45,  0.38, 'Initial stock receive', 'PO-2024-005'),
+  ('00000000-0000-0000-0003-000000000011', 'in', 200, 0.12, 'Initial stock receive', 'PO-2024-005'),
+  ('00000000-0000-0000-0003-000000000012', 'in', 8,  34.60, 'Initial stock receive', 'PO-2024-006'),
+  ('00000000-0000-0000-0003-000000000013', 'in', 8,   9.20, 'Initial stock receive', 'PO-2024-006'),
+  ('00000000-0000-0000-0003-000000000014', 'in', 6,  14.50, 'Initial stock receive', 'PO-2024-007'),
+  ('00000000-0000-0000-0003-000000000015', 'in', 12,  4.80, 'Initial stock receive', 'PO-2024-007');
 
 
 -- Cases ───────────────────────────────────────────────────────
@@ -593,42 +639,42 @@ INSERT INTO cases
    received_date, due_date, completed_date,
    labor_cost, machine_cost, final_price, notes)
 VALUES
-  ('cas-00000000-0000-0000-0000-000000000001',
+  ('00000000-0000-0000-0004-000000000001',
    'CASE-2024-0001', 'Maria Ionescu',      'Smile Clinic Chișinău', 'Dr. Andrei Popescu',
    'crown',    'delivered',  '11',       'A2',  '2024-09-02', '2024-09-09', '2024-09-08',
    45.00, 12.00, 180.00, 'Patient requested high translucency. Approved by doctor on fit-in.'),
 
-  ('cas-00000000-0000-0000-0000-000000000002',
+  ('00000000-0000-0000-0004-000000000002',
    'CASE-2024-0002', 'Ion Cojocaru',       'DentArt Balti',         'Dr. Elena Rusu',
    'bridge',   'completed',  '12, 13, 14','B1', '2024-09-05', '2024-09-15', '2024-09-14',
    110.00, 30.00, 520.00, '3-unit bridge upper left. Metal-ceramic. Extra try-in scheduled.'),
 
-  ('cas-00000000-0000-0000-0000-000000000003',
+  ('00000000-0000-0000-0004-000000000003',
    'CASE-2024-0003', 'Svetlana Moraru',    'Dent Total Orhei',      'Dr. Victor Florea',
    'veneer',   'in_progress','21, 22, 23','A1', '2024-09-10', '2024-09-20', NULL,
    75.00, 18.00, 390.00, 'Pressed e.max veneers, ultra-thin prep. Photo guide provided.'),
 
-  ('cas-00000000-0000-0000-0000-000000000004',
+  ('00000000-0000-0000-0004-000000000004',
    'CASE-2024-0004', 'Gheorghe Lungu',     'Smile Clinic Chișinău', 'Dr. Andrei Popescu',
    'implant_crown', 'awaiting_approval', '36', 'A3', '2024-09-12', '2024-09-22', NULL,
    55.00, 15.00, 230.00, 'Screw-retained zirconia crown on Straumann BL 4.1 implant.'),
 
-  ('cas-00000000-0000-0000-0000-000000000005',
+  ('00000000-0000-0000-0004-000000000005',
    'CASE-2024-0005', 'Tatiana Botnaru',    'Family Dent Cahul',     'Dr. Natalia Ciobanu',
    'denture_full', 'draft',      NULL,     NULL,  '2024-09-15', '2024-09-30', NULL,
    120.00, 25.00, 380.00, 'Full upper & lower denture. Shade pre-selected at clinic.'),
 
-  ('cas-00000000-0000-0000-0000-000000000006',
+  ('00000000-0000-0000-0004-000000000006',
    'CASE-2024-0006', 'Alexandru Vrabie',   'OrthoSmile Tiraspol',   'Dr. Inna Savchenko',
    'night_guard', 'completed',  NULL,     NULL,  '2024-09-03', '2024-09-07', '2024-09-06',
    20.00, 5.00, 90.00, 'Hard acrylic night guard, upper arch, 2mm thickness.'),
 
-  ('cas-00000000-0000-0000-0000-000000000007',
+  ('00000000-0000-0000-0004-000000000007',
    'CASE-2024-0007', 'Natalia Ghelase',    'Dent Total Orhei',      'Dr. Victor Florea',
    'inlay_onlay', 'in_progress', '15, 16', 'A2', '2024-09-13', '2024-09-18', NULL,
    60.00, 14.00, 280.00, 'Two e.max press inlays. Staining and glazing only, no layering.'),
 
-  ('cas-00000000-0000-0000-0000-000000000008',
+  ('00000000-0000-0000-0004-000000000008',
    'CASE-2024-0008', 'Dumitru Păduraru',   'DentArt Balti',         'Dr. Elena Rusu',
    'crown',    'cancelled',  '46',       'A3', '2024-09-01', '2024-09-08', NULL,
    0.00, 0.00, 0.00, 'Cancelled — patient changed treatment plan to implant.');
@@ -643,47 +689,47 @@ INSERT INTO case_material_usage
   (case_id, material_id, quantity_used, unit_cost_at_time, notes)
 VALUES
   -- CASE-2024-0001: e.max crown (1 block, some stain)
-  ('cas-00000000-0000-0000-0000-000000000001',
-   'mat-00000000-0000-0000-0000-000000000001', 1,    18.50, 'A2 LT block for crown on 11'),
-  ('cas-00000000-0000-0000-0000-000000000001',
-   'mat-00000000-0000-0000-0000-000000000004', 0.50,  6.80, 'White essence for incisal'),
-  ('cas-00000000-0000-0000-0000-000000000001',
-   'mat-00000000-0000-0000-0000-000000000013', 0.25,  9.20, '3 polishing points used'),
+  ('00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0003-000000000001', 1,    18.50, 'A2 LT block for crown on 11'),
+  ('00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0003-000000000004', 0.50,  6.80, 'White essence for incisal'),
+  ('00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0003-000000000013', 0.25,  9.20, '3 polishing points used'),
 
   -- CASE-2024-0002: metal-ceramic bridge (alloy + ceramic)
-  ('cas-00000000-0000-0000-0000-000000000002',
-   'mat-00000000-0000-0000-0000-000000000006', 18.0,  0.92, 'Ni-Cr-Mo coping framework'),
-  ('cas-00000000-0000-0000-0000-000000000002',
-   'mat-00000000-0000-0000-0000-000000000005', 12.0,  5.20, 'Ceramage dentin layering'),
-  ('cas-00000000-0000-0000-0000-000000000002',
-   'mat-00000000-0000-0000-0000-000000000011', 15.0,  0.12, 'Wax-up material'),
-  ('cas-00000000-0000-0000-0000-000000000002',
-   'mat-00000000-0000-0000-0000-000000000014', 0.60, 14.50, '3 burs used during finishing'),
+  ('00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0003-000000000006', 18.0,  0.92, 'Ni-Cr-Mo coping framework'),
+  ('00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0003-000000000005', 12.0,  5.20, 'Ceramage dentin layering'),
+  ('00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0003-000000000011', 15.0,  0.12, 'Wax-up material'),
+  ('00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0003-000000000014', 0.60, 14.50, '3 burs used during finishing'),
 
   -- CASE-2024-0003: 3x e.max veneers
-  ('cas-00000000-0000-0000-0000-000000000003',
-   'mat-00000000-0000-0000-0000-000000000002', 3,    18.50, '1 B1 HT block per veneer'),
-  ('cas-00000000-0000-0000-0000-000000000003',
-   'mat-00000000-0000-0000-0000-000000000004', 1.20,  6.80, 'Characterisation stain'),
-  ('cas-00000000-0000-0000-0000-000000000003',
-   'mat-00000000-0000-0000-0000-000000000012', 0.60, 34.60, 'Resin cement for 3 veneers'),
+  ('00000000-0000-0000-0004-000000000003',
+   '00000000-0000-0000-0003-000000000002', 3,    18.50, '1 B1 HT block per veneer'),
+  ('00000000-0000-0000-0004-000000000003',
+   '00000000-0000-0000-0003-000000000004', 1.20,  6.80, 'Characterisation stain'),
+  ('00000000-0000-0000-0004-000000000003',
+   '00000000-0000-0000-0003-000000000012', 0.60, 34.60, 'Resin cement for 3 veneers'),
 
   -- CASE-2024-0004: zirconia implant crown
-  ('cas-00000000-0000-0000-0000-000000000004',
-   'mat-00000000-0000-0000-0000-000000000003', 1,    44.00, '98mm A2 multi-layer disc'),
-  ('cas-00000000-0000-0000-0000-000000000004',
-   'mat-00000000-0000-0000-0000-000000000014', 0.40, 14.50, '2 diamond burs for zirconia'),
+  ('00000000-0000-0000-0004-000000000004',
+   '00000000-0000-0000-0003-000000000003', 1,    44.00, '98mm A2 multi-layer disc'),
+  ('00000000-0000-0000-0004-000000000004',
+   '00000000-0000-0000-0003-000000000014', 0.40, 14.50, '2 diamond burs for zirconia'),
 
   -- CASE-2024-0006: night guard (resin)
-  ('cas-00000000-0000-0000-0000-000000000006',
-   'mat-00000000-0000-0000-0000-000000000010', 8.0,   0.38, 'Pattern resin for thermoform'),
-  ('cas-00000000-0000-0000-0000-000000000006',
-   'mat-00000000-0000-0000-0000-000000000013', 0.25,  9.20, 'Post-polish'),
+  ('00000000-0000-0000-0004-000000000006',
+   '00000000-0000-0000-0003-000000000010', 8.0,   0.38, 'Pattern resin for thermoform'),
+  ('00000000-0000-0000-0004-000000000006',
+   '00000000-0000-0000-0003-000000000013', 0.25,  9.20, 'Post-polish'),
 
   -- CASE-2024-0007: 2x inlays
-  ('cas-00000000-0000-0000-0000-000000000007',
-   'mat-00000000-0000-0000-0000-000000000001', 2,    18.50, '1 block per inlay'),
-  ('cas-00000000-0000-0000-0000-000000000007',
-   'mat-00000000-0000-0000-0000-000000000004', 0.30,  6.80, 'Surface stain only'),
-  ('cas-00000000-0000-0000-0000-000000000007',
-   'mat-00000000-0000-0000-0000-000000000015', 0.10,  4.80, '5 mixing tips');
+  ('00000000-0000-0000-0004-000000000007',
+   '00000000-0000-0000-0003-000000000001', 2,    18.50, '1 block per inlay'),
+  ('00000000-0000-0000-0004-000000000007',
+   '00000000-0000-0000-0003-000000000004', 0.30,  6.80, 'Surface stain only'),
+  ('00000000-0000-0000-0004-000000000007',
+   '00000000-0000-0000-0003-000000000015', 0.10,  4.80, '5 mixing tips');

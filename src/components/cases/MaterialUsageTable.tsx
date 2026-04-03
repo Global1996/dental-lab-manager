@@ -80,7 +80,7 @@ export function MaterialUsageTable({ caseId, usages, editable }: Props) {
 
   const grandTotal = usages.reduce((sum, u) => sum + calcLineCost(Number(u.quantity_used), Number(u.unit_cost_at_time)), 0)
 
-  const cols = ['Material', 'SKU', 'Cant.', 'Cost Unitar (snapshot)', 'Total Linie', 'Observații']
+  const cols = ['Material', 'SKU', 'Cant.', 'Cost Unitar (capturat)', 'Total Linie', 'Observații']
   if (editable) cols.push('')
 
   return (
@@ -127,7 +127,7 @@ export function MaterialUsageTable({ caseId, usages, editable }: Props) {
                     </span>
                     <span className="ml-1.5 text-xs text-muted-foreground/60
                                      bg-muted px-1.5 py-0.5 rounded font-mono">
-                      snapshot
+                      capturat
                     </span>
                   </td>
 
