@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-# dental-lab-manager1
-=======
-# dental-lab-manager
-new
->>>>>>> 5d320bcfdb87db158f2665ce46e9a09b15c82d98
-=======
 # Dental Lab Manager
 
 A full-stack management application for dental laboratories — built with **Next.js 14**, **Supabase**, and **TypeScript**.
@@ -243,4 +235,4 @@ dental-lab-manager/
 ## License
 
 MIT
->>>>>>> 481d03b (feat: Dental Lab Manager — initial commit)
+# dental-lab-manager12
