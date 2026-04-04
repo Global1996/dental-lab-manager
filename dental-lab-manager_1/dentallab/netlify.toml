@@ -1,0 +1,13 @@
+# netlify.toml
+# Netlify configuration for Next.js 14 (App Router + Server Actions + Middleware)
+# @netlify/plugin-nextjs handles SSR, Server Actions, API Routes, and cookies automatically.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
